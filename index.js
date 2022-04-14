@@ -6,6 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const { problemOne, getPosts } = require('./controller/post');
 const cache = apicache.middleware;
+
 const onlyStatus200 = (req, res) => res.statusCode === 200;
 const cacheSuccesses = cache('5 minutes', onlyStatus200);
 
