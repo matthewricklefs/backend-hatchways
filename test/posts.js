@@ -22,7 +22,7 @@ describe('Hatchways Back End Assessment', () => {
   });
 
   describe('Problem 2', () => {
-    it('will return 200 status for successfully hitting endpoint', (done) => {
+    it('will return 200 status for successfully hitting endpoint with required tag and optional sortBy and direction args', (done) => {
       request(
         'http://localhost:3000/api/posts/tech/id/asc',
         (error, response, body) => {
