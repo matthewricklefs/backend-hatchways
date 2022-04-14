@@ -19,32 +19,48 @@ const problemOne = (req, res) => {
 // ]
 
 const getPosts = (req, res) => {
-  const { tags } = req.params;
+  const { tags, sortBy, direction } = req.params;
+
+  const sortValues = [
+    'id',
+    'author',
+    'authorId',
+    'likes',
+    'popularity',
+    'reads',
+    'tags',
+  ];
+
+  const directions = ['asc', 'desc'];
+
+  if (sortValues.indexOf(sortBy) === -1) {
+    res.status(400).send({
+      error: 'sortBy param is invalid',
+    });
+  }
+  if (directions.indexOf(direction) === -1) {
+    res.status(400).send({
+      error: 'direction param is invalid',
+    });
+  }
 
   if (tags.indexOf(',') !== -1) {
     let tagArray = tags.split(',');
 
     let getTags = tagArray.map((tag, i) => {
-      return axios.get(
-        `https://api.hatchways.io/assessment/blog/posts?tag=${tag}`
+      return (
+        axios.get(
+          `https://api.hatchways.io/assessment/blog/posts?tag=${tag}&sortBy=${sortBy}&direction=${direction}`
+        ),
+        i
       );
     });
 
     axios
-      .all([...getTags])
+      .all([...getTags[i]])
       .then(
-        axios.spread((tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9) => {
-          let data = [
-            tag1 ? tag1.data.posts : '',
-            tag2 ? tag2.data.posts : '',
-            tag3 ? tag3.data.posts : '',
-            tag4 ? tag4.data.posts : '',
-            tag5 ? tag5.data.posts : '',
-            tag6 ? tag6.data.posts : '',
-            tag7 ? tag7.data.posts : '',
-            tag8 ? tag8.data.posts : '',
-            tag9 ? tag9.data.posts : '',
-          ];
+        axios.spread((...getTags) => {
+          let data = [...getTags[i]];
 
           let post = {};
           let posts = [];
@@ -52,13 +68,21 @@ const getPosts = (req, res) => {
           for (let i = 0; i < data.length; i++) {
             let blog = data[i];
 
-            for (let i = 0; i < blog.length; i++) {
-              post[blog[i].id] = blog[i];
+            for (let j = 0; j < blog.length; j++) {
+              post[blog[j].id] = blog[j];
             }
           }
 
           for (let key in post) {
             posts.push(post[key]);
+          }
+
+          if (sortBy) {
+            if (direction === 'desc') {
+              posts = posts.sort((a, b) => (b[sortBy] > a[sortBy] ? 1 : -1));
+            } else {
+              posts = posts.sort((a, b) => (b[sortBy] < a[sortBy] ? 1 : -1));
+            }
           }
 
           res.status(200).send(posts);
@@ -76,6 +100,14 @@ const getPosts = (req, res) => {
       .get(`http://hatchways.io/api/assessment/blog/posts?tag=${tags}`)
       .then((req) => {
         let data = req.data.posts;
+
+        if (sortBy) {
+          if (direction === 'desc') {
+            data = data.sort((a, b) => (b[sortBy] > a[sortBy] ? 1 : -1));
+          } else {
+            data = data.sort((a, b) => (b[sortBy] < a[sortBy] ? 1 : -1));
+          }
+        }
 
         res.status(200).send(data);
         console.log(data);
