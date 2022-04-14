@@ -16,6 +16,8 @@ app.get('/', (req, res) => {
 
 app.get('/api/ping', problemOne);
 
+app.get('/api/posts/:tags', getPosts);
+
 app.listen(PORT, () => {
   console.log(`server running on: http://localhost:${PORT}`);
 });
