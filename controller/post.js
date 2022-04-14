@@ -1,22 +1,24 @@
 const axios = require('axios');
+const NodeCache = require('node-cache');
+const cache = new NodeCache({ stdTTL: 15 });
+
+const verifyCache = (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (cache.has(id)) {
+      return res.status(200).json(cache.get(id));
+    }
+    return next();
+  } catch (error) {
+    throw new Error(err);
+  }
+};
 
 const problemOne = (req, res) => {
   res.status(200).send({
     success: 'true',
   });
 };
-
-// "posts": [{
-// "id": 1,
-// "author": "Rylee Paul",
-// "authorId": 9,
-// "likes": 960,
-// "popularity": 0.13,
-// "reads": 50361,
-// "tags": [ "tech", "health" ]
-// },
-// ...
-// ]
 
 const getPosts = (req, res) => {
   const { tags, sortBy, direction } = req.params;
@@ -61,6 +63,7 @@ const getPosts = (req, res) => {
       .then(
         axios.spread((...getTags) => {
           let data = [...getTags[i]];
+          cache.set(i, data);
 
           let post = {};
           let posts = [];
@@ -125,4 +128,5 @@ const getPosts = (req, res) => {
 module.exports = {
   problemOne,
   getPosts,
+  verifyCache,
 };
